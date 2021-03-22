@@ -1,0 +1,15 @@
+{
+	/* vs code */
+	"files.exclude": {
+		"node_modules": true
+	},
+	"editor.tabSize": 3,
+	"editor.codeActionsOnSave": {
+		"source.fixAll": true, /* 保存后自动修复 */
+	},
+
+	"eslint.validate": ["typescript"],
+
+	// "editor.defaultFormatter": "esbenp.prettier-vscode",
+	"typescript.tsdk": "node_modules\\typescript\\lib"
+}
