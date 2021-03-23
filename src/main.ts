@@ -98,17 +98,20 @@ const render = () => {
          left, top, width, height, background = "red",
       } = options;
 
-      const centerX = left + Math.floor(width / 2);
-      const centerY = top + Math.floor(height / 2);
+      const { floor, min } = Math;
+      const centerX = left + floor(width / 2);
+      const centerY = top + floor(height / 2);
+      const scale = min((canvasHeight - top) / 60, 1);
 
       // 渲染元素
       ctx.save();
       ctx.fillStyle = background;
       ctx.translate(centerX, centerY);
-      ctx.fillRect(-centerX, top, width, height);
+      ctx.scale(scale, scale);
+      ctx.fillRect(-floor(width / 2), -floor(height / 2), width, height);
 
       // 未完成动画
-      if (top >= -40) {
+      if (top >= -height) {
          options.top -= 2;
          // 存储已经运动完成数组索引
       } else {
@@ -144,8 +147,7 @@ export const animationDraw = (): void => {
 
    // 动画队列添加元素
    animationList.push({
-      // left: Math.floor(Math.random() * (canvasWidth - 30)),
-      left: 0,
+      left: Math.floor(canvasWidth / 2 - 20),
       top: canvasHeight,
       width: 40,
       height: 40,
