@@ -44,7 +44,7 @@ export const getRandom = (min: number, max: number): number => {
  * @param arg 数据
  * @returns
  */
-export const getArrayRandom = <T>(arg:Array<T>): T => {
+export const getArrayRandom = <T>(arg: Array<T>): T => {
    const randomIndex = getRandom(0, arg.length);
 
    return arg[randomIndex];
@@ -53,17 +53,23 @@ export const getArrayRandom = <T>(arg:Array<T>): T => {
 export interface AnimationConfig {
    /** 图标 */
    icons: string[];
+   /** 图标大小 */
+   iconSize: number;
    /** 背景  */
-   background: string[];
+   backgrounds: string[];
+   /** 背景大小 */
+   backgroundSize: number;
    /** 速度 */
-   speed: number
+   speed: number;
 }
 
 /** 配置 */
 export const defaultConfig: AnimationConfig = {
    icons: [],
+   iconSize: 40,
+   backgroundSize: 72,
    speed: 100,
-   background: [
+   backgrounds: [
       "#ff839b, #fbd8b8",
       "#6a82fc, #cea8fd",
       "#43bbed, #38edc0",
@@ -78,14 +84,17 @@ export const defaultConfig: AnimationConfig = {
  * 配置合并
  * TO DO 需要更详细合并规则
  */
-export const animationConfigMerge = (target:AnimationConfig, source: Partial<AnimationConfig>): void => {
+export const animationConfigMerge = (
+   target: AnimationConfig,
+   source: Partial<AnimationConfig>,
+): void => {
    const getSourceType = <K>(val: K) => Object.prototype.toString.call(val);
 
-   if (getSourceType(target) === "[object Object]") {
+   if (getSourceType(target) !== "[object Object]") {
       throw new Error("target is not Object");
    }
 
-   if (getSourceType(source) === "[object Object]") {
+   if (getSourceType(source) !== "[object Object]") {
       throw new Error("target is not Object");
    }
 
@@ -113,7 +122,10 @@ const animationConfig = { ...defaultConfig };
  * @param elQuery
  * @param imgs
  */
-export const animationInit = (elQuery: string, config: Partial<AnimationConfig>) => {
+export const animationInit = (
+   elQuery: string,
+   config: Partial<AnimationConfig>,
+) => {
    // 如果参数为空
    if (!elQuery) {
       throw new Error("elQuery is undefined");
@@ -188,9 +200,34 @@ const render = () => {
 
    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
+   /**
+    * 获取放大尺寸
+    */
+   function getScan(scale, top: number, height: number): number {
+      const step = height / 10;
+      const current = height - top;
+      const result = 1;
+
+      if (current >= step) {
+         return result;
+      }
+
+      if (current < step / 2) {
+         return 0.4;
+      }
+      return step;
+
+      return result;
+
    animationList.forEach((options, index) => {
       const {
-         left, top, width, height, background, icon, backgroundSize,
+         left,
+         top,
+         width,
+         height,
+         background,
+         icon,
+         backgroundSize,
       } = options;
 
       const img = new Image();
@@ -218,7 +255,12 @@ const render = () => {
       // 如果是渐变
       if (background.includes(",")) {
          const [gradientStart = "", gradientEnd = ""] = background.split(",");
-         fillStyle = ctx.createLinearGradient(-bgRdius, -bgRdius, 0, backgroundSize);
+         fillStyle = ctx.createLinearGradient(
+            -bgRdius,
+            -bgRdius,
+            0,
+            backgroundSize,
+         );
          fillStyle.addColorStop(0, gradientStart.trim());
          fillStyle.addColorStop(1, gradientEnd.trim());
       } else {
@@ -252,7 +294,9 @@ const render = () => {
 
    // 如果含有完成的元素则移除动画队列
    if (animationEndSet.size > 0) {
-      animationList = animationList.filter((val, index) => !animationEndSet.has(index));
+      animationList = animationList.filter(
+         (val, index) => !animationEndSet.has(index),
+      );
    }
 
    // 是否继续执行动画
@@ -270,19 +314,21 @@ export const animationDraw = (): void => {
       throw new Error("animation is not init, use animationInit init");
    }
 
+   const { iconSize, icons, backgrounds, backgroundSize } = animationConfig;
+
    // 动态获取图标
-   const icon = getArrayRandom(animationConfig.icons);
+   const icon = getArrayRandom(icons);
    // 动态获取图标背景颜色
-   const background = getArrayRandom(animationConfig.background);
+   const background = getArrayRandom(backgrounds);
 
    // 动画队列添加元素
    animationList.push({
       left: Math.floor(canvasWidth / 2 - 17),
       top: canvasHeight,
-      width: 44,
-      height: 44,
+      width: iconSize,
+      height: iconSize,
       icon,
-      backgroundSize: 72,
+      backgroundSize,
       background,
    });
 

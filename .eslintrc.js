@@ -3,17 +3,13 @@ module.exports = {
       browser: true,
       es2021: true,
    },
-   extends: [
-      "airbnb-base",
-   ],
+   extends: ["airbnb-base", "plugin:prettier/recommended"],
    parser: "@typescript-eslint/parser",
    parserOptions: {
       ecmaVersion: 12,
       sourceType: "module",
    },
-   plugins: [
-      "@typescript-eslint",
-   ],
+   plugins: ["@typescript-eslint"],
    rules: {
       indent: ["off"],
 
@@ -48,6 +44,9 @@ module.exports = {
 
       // 该规则可以强制或禁止使用命名函数表达式。
       "func-names": "off",
+
+      // 未使用变量
+      "no-unused-vars": "warn",
 
       // 修改函数参数
       "no-param-reassign": "off",

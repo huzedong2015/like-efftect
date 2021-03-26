@@ -47,8 +47,10 @@ export const getArrayRandom = (arg) => {
 /** 配置 */
 export const defaultConfig = {
     icons: [],
+    iconSize: 40,
+    backgroundSize: 72,
     speed: 100,
-    background: [
+    backgrounds: [
         "#ff839b, #fbd8b8",
         "#6a82fc, #cea8fd",
         "#43bbed, #38edc0",
@@ -64,10 +66,10 @@ export const defaultConfig = {
  */
 export const animationConfigMerge = (target, source) => {
     const getSourceType = (val) => Object.prototype.toString.call(val);
-    if (getSourceType(target) === "[object Object]") {
+    if (getSourceType(target) !== "[object Object]") {
         throw new Error("target is not Object");
     }
-    if (getSourceType(source) === "[object Object]") {
+    if (getSourceType(source) !== "[object Object]") {
         throw new Error("target is not Object");
     }
     Object.assign(target, source);
@@ -139,88 +141,106 @@ const render = () => {
     // 已完成的渲染索引
     const animationEndSet = new Set();
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    animationList.forEach((options, index) => {
-        const { left, top, width, height, background, icon, backgroundSize, } = options;
-        const img = new Image();
-        img.src = icon;
-        const { floor, min } = Math;
-        const bgRdius = floor(backgroundSize / 2);
-        const centerX = left + floor(width / 2);
-        const centerY = top + floor(height / 2);
-        const scale = min(0.3 + (canvasHeight - top) / (canvasHeight / 3), 1);
-        // const opacity = min(top / (canvasHeight / 8), 1);
-        // 渲染元素
-        ctx.save();
-        ctx.fillStyle = background;
-        ctx.translate(centerX, centerY);
-        ctx.scale(scale, scale);
-        // 透明度设置
-        // ctx.globalAlpha = opacity;
-        // 绘制背景样式
-        let fillStyle = "";
-        // 如果是渐变
-        if (background.includes(",")) {
-            const [gradientStart = "", gradientEnd = ""] = background.split(",");
-            fillStyle = ctx.createLinearGradient(-bgRdius, -bgRdius, 0, backgroundSize);
-            fillStyle.addColorStop(0, gradientStart.trim());
-            fillStyle.addColorStop(1, gradientEnd.trim());
+    /**
+     * 获取放大尺寸
+     */
+    function getScan(scale, top, height) {
+        const step = height / 10;
+        const current = height - top;
+        const result = 1;
+        if (current >= step) {
+            return result;
         }
-        else {
-            fillStyle = background;
+        if (current < step / 2) {
+            return 0.4;
         }
-        // 绘制背景
-        ctx.beginPath();
-        ctx.arc(0, 0, bgRdius, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fillStyle = fillStyle;
-        ctx.fill();
-        // 绘制图标
-        ctx.drawImage(img, -floor(width / 2), -floor(height / 2), width, height);
-        // 未完成动画
-        if (top >= -backgroundSize) {
-            options.top -= 3;
-            // 存储已经运动完成数组索引
-        }
-        else {
-            animationEndSet.add(index);
-            if (animationEndListener.length > 0) {
-                animationEndListener.forEach((fn) => fn());
+        return step;
+        return result;
+        animationList.forEach((options, index) => {
+            const { left, top, width, height, background, icon, backgroundSize, } = options;
+            const img = new Image();
+            img.src = icon;
+            const { floor, min } = Math;
+            const bgRdius = floor(backgroundSize / 2);
+            const centerX = left + floor(width / 2);
+            const centerY = top + floor(height / 2);
+            const scale = min(0.3 + (canvasHeight - top) / (canvasHeight / 3), 1);
+            // const opacity = min(top / (canvasHeight / 8), 1);
+            // 渲染元素
+            ctx.save();
+            ctx.fillStyle = background;
+            ctx.translate(centerX, centerY);
+            ctx.scale(scale, scale);
+            // 透明度设置
+            // ctx.globalAlpha = opacity;
+            // 绘制背景样式
+            let fillStyle = "";
+            // 如果是渐变
+            if (background.includes(",")) {
+                const [gradientStart = "", gradientEnd = ""] = background.split(",");
+                fillStyle = ctx.createLinearGradient(-bgRdius, -bgRdius, 0, backgroundSize);
+                fillStyle.addColorStop(0, gradientStart.trim());
+                fillStyle.addColorStop(1, gradientEnd.trim());
             }
+            else {
+                fillStyle = background;
+            }
+            // 绘制背景
+            ctx.beginPath();
+            ctx.arc(0, 0, bgRdius, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fillStyle = fillStyle;
+            ctx.fill();
+            // 绘制图标
+            ctx.drawImage(img, -floor(width / 2), -floor(height / 2), width, height);
+            // 未完成动画
+            if (top >= -backgroundSize) {
+                options.top -= 3;
+                // 存储已经运动完成数组索引
+            }
+            else {
+                animationEndSet.add(index);
+                if (animationEndListener.length > 0) {
+                    animationEndListener.forEach((fn) => fn());
+                }
+            }
+            ctx.restore();
+        });
+        // 如果含有完成的元素则移除动画队列
+        if (animationEndSet.size > 0) {
+            animationList = animationList.filter((val, index) => !animationEndSet.has(index));
         }
-        ctx.restore();
-    });
-    // 如果含有完成的元素则移除动画队列
-    if (animationEndSet.size > 0) {
-        animationList = animationList.filter((val, index) => !animationEndSet.has(index));
+        // 是否继续执行动画
+        if (animationList.length > 0) {
+            requestAnimationFrame(render);
+        }
     }
-    // 是否继续执行动画
-    if (animationList.length > 0) {
-        requestAnimationFrame(render);
-    }
-};
-/**
- * 添加一个动画
- */
-export const animationDraw = () => {
-    // 没有初始话
-    if (!(ctx instanceof CanvasRenderingContext2D)) {
-        throw new Error("animation is not init, use animationInit init");
-    }
-    // 动态获取图标
-    const icon = getArrayRandom(animationConfig.icons);
-    // 动态获取图标背景颜色
-    const background = getArrayRandom(animationConfig.background);
-    // 动画队列添加元素
-    animationList.push({
-        left: Math.floor(canvasWidth / 2 - 17),
-        top: canvasHeight,
-        width: 44,
-        height: 44,
-        icon,
-        backgroundSize: 72,
-        background,
-    });
-    if (animationList.length === 1) {
-        requestAnimationFrame(render);
-    }
+    ;
+    /**
+     * 添加一个动画
+     */
+    export const animationDraw = () => {
+        // 没有初始话
+        if (!(ctx instanceof CanvasRenderingContext2D)) {
+            throw new Error("animation is not init, use animationInit init");
+        }
+        const { iconSize, icons, backgrounds, backgroundSize } = animationConfig;
+        // 动态获取图标
+        const icon = getArrayRandom(icons);
+        // 动态获取图标背景颜色
+        const background = getArrayRandom(backgrounds);
+        // 动画队列添加元素
+        animationList.push({
+            left: Math.floor(canvasWidth / 2 - 17),
+            top: canvasHeight,
+            width: iconSize,
+            height: iconSize,
+            icon,
+            backgroundSize,
+            background,
+        });
+        if (animationList.length === 1) {
+            requestAnimationFrame(render);
+        }
+    };
 };

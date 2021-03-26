@@ -30,6 +30,7 @@
             margin: 0 auto;
             background: none;
             border: none;
+            outline: none;
             transition: transform .3s linear;
         }
 
@@ -64,7 +65,9 @@
             return `/demo/imgs/icon_${index + 1}.svg`;
         });
 
-        animationInit("#canvas", imgs);
+        animationInit("#canvas", {
+            icons: imgs
+        });
 
         document.querySelector("button").addEventListener("pointerdown", (e) => {
             e.preventDefault();
