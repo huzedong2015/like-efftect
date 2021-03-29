@@ -1,6 +1,6 @@
 import { defaultConfig, animationConfigMerge } from "./config";
 import type { AnimationConfig } from "./config";
-import { preLoadImgs, getArrayRandom } from "./ulits";
+import { preLoadImgs, getArrayRandom, getRandom } from "./ulits";
 
 // canvas
 let canvas: HTMLCanvasElement;
@@ -69,51 +69,85 @@ export function onAnimateEnd(fn: Function): void {
 }
 
 let animationList: Array<{
-   /** 左偏移 */
-   left: number;
-   /** 右偏移 */
-   top: number;
+   /** 索引 */
+   index: number;
    /** 宽度 */
    width: number;
    /** 高度 */
    height: number;
+   /** 水平移动最大值 */
+   horizontalRange: number;
    /** 图标 */
-   icon: string;
+   icon: HTMLImageElement;
    /** 背景颜色 */
    background: string;
    /** 背景大小 */
    backgroundSize: number;
+   /** 速度 */
+   speed: number;
 }> = [];
 
 /**
  * 渲染
  */
-const render = () => {
+function render() {
    // 已完成的渲染索引
    const animationEndSet: Set<number> = new Set();
 
-   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+   /**
+    * 获取大小
+    * @param progress
+    */
+   function getScale(progress: number) {
+      // 基础大小
+      const baseScale = 0.2;
 
-   animationList.forEach((options, index) => {
+      return Math.min(baseScale + progress * 2, 1);
+   }
+
+   /**
+    * 获取透明度
+    * @param progress 距离边缘进度
+    */
+   function getOpacity(progress: number): number {
+      const showBase = 0.6;
+      const showEndProgress = 0.3;
+      const fadeStartProgress = 0.9;
+      let opacity = 1;
+
+      if (progress < showEndProgress) {
+         opacity = showBase + (progress / 0.3) * (1 - showBase);
+      } else if (progress > showEndProgress) {
+         if (progress >= 1) {
+            opacity = 0;
+         } else {
+            opacity = (1 - progress) / (1 - fadeStartProgress);
+         }
+      }
+
+      return Math.min(opacity, 1);
+   }
+
+   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+   animationList.forEach((options, idx) => {
       const {
-         left,
-         top,
+         index,
          width,
          height,
+         horizontalRange,
          background,
          icon,
          backgroundSize,
+         speed,
       } = options;
 
-      const img = new Image();
-      img.src = icon;
-
-      const { floor, min } = Math;
+      const { floor } = Math;
       const bgRdius = floor(backgroundSize / 2);
-      const centerX = left + floor(width / 2);
-      const centerY = top + floor(height / 2);
-      const scale = min(0.3 + (canvasHeight - top) / (canvasHeight / 3), 1);
-      // const opacity = min(top / (canvasHeight / 8), 1);
+      const centerX = canvasWidth / 2 + Math.cos(index / 10) * horizontalRange;
+      const centerY = canvasHeight - speed * index;
+      const edgeProgress = (speed * index) / (canvasHeight - bgRdius);
+      const scale = getScale(edgeProgress);
+      const opacity = getOpacity(edgeProgress);
 
       // 渲染元素
       ctx.save();
@@ -122,7 +156,7 @@ const render = () => {
       ctx.scale(scale, scale);
 
       // 透明度设置
-      // ctx.globalAlpha = opacity;
+      ctx.globalAlpha = opacity;
 
       // 绘制背景样式
       let fillStyle: string | CanvasGradient = "";
@@ -150,14 +184,14 @@ const render = () => {
       ctx.fill();
 
       // 绘制图标
-      ctx.drawImage(img, -floor(width / 2), -floor(height / 2), width, height);
+      ctx.drawImage(icon, -floor(width / 2), -floor(height / 2), width, height);
 
       // 未完成动画
-      if (top >= -backgroundSize) {
-         options.top -= 3;
+      if (centerY >= -backgroundSize) {
+         options.index += 1;
          // 存储已经运动完成数组索引
       } else {
-         animationEndSet.add(index);
+         animationEndSet.add(idx);
 
          if (animationEndListener.length > 0) {
             animationEndListener.forEach((fn) => fn());
@@ -174,11 +208,11 @@ const render = () => {
       );
    }
 
-   // 是否继续执行动画
+   // // 是否继续执行动画
    if (animationList.length > 0) {
       requestAnimationFrame(render);
    }
-};
+}
 
 /**
  * 添加一个动画
@@ -189,40 +223,34 @@ export function animationDraw(): void {
       throw new Error("animation is not init, use animationInit init");
    }
 
-   const { iconSize, icons, backgrounds, backgroundSize } = animationConfig;
+   const {
+      iconSize,
+      icons,
+      backgrounds,
+      backgroundSize,
+      speed,
+   } = animationConfig;
 
    // 动态获取图标
    const icon = getArrayRandom(icons);
    // 动态获取图标背景颜色
    const background = getArrayRandom(backgrounds);
+   // 水平移动最大范围
+   const horizontalRange = getRandom(10, 60);
 
-   /**
-    * 获取放大尺寸
-    */
-   //  function getScan(scale: number, top: number, height: number): number {
-   //    const step = height / 10;
-   //    const current = height - top;
-   //    const result = 1;
-
-   //    if (current >= step) {
-   //       return result;
-   //    }
-
-   //    if (current < step / 2) {
-   //       return 0.4;
-   //    }
-   //    return step;
-   // }
+   const img = new Image();
+   img.src = icon;
 
    // 动画队列添加元素
    animationList.push({
-      left: Math.floor(canvasWidth / 2 - 17),
-      top: canvasHeight,
+      index: 0,
+      horizontalRange,
       width: iconSize,
       height: iconSize,
-      icon,
+      icon: img,
       backgroundSize,
       background,
+      speed,
    });
 
    if (animationList.length === 1) {

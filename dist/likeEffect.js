@@ -3,7 +3,7 @@ const defaultConfig = {
     icons: [],
     iconSize: 40,
     backgroundSize: 72,
-    speed: 2,
+    speed: 3,
     backgrounds: [
         "#ff839b, #fbd8b8",
         "#6a82fc, #cea8fd",
@@ -135,27 +135,57 @@ let animationList = [];
 /**
  * 渲染
  */
-const render = () => {
+function render() {
     // 已完成的渲染索引
     const animationEndSet = new Set();
+    /**
+     * 获取大小
+     * @param progress
+     */
+    function getScale(progress) {
+        // 基础大小
+        const baseScale = 0.2;
+        return Math.min(baseScale + progress * 2, 1);
+    }
+    /**
+     * 获取透明度
+     * @param progress 距离边缘进度
+     */
+    function getOpacity(progress) {
+        const showBase = 0.6;
+        const showEndProgress = 0.3;
+        const fadeStartProgress = 0.9;
+        let opacity = 1;
+        if (progress < showEndProgress) {
+            opacity = showBase + (progress / 0.3) * (1 - showBase);
+        }
+        else if (progress > showEndProgress) {
+            if (progress >= 1) {
+                opacity = 0;
+            }
+            else {
+                opacity = (1 - progress) / (1 - fadeStartProgress);
+            }
+        }
+        return Math.min(opacity, 1);
+    }
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    animationList.forEach((options, index) => {
-        const { left, top, width, height, background, icon, backgroundSize, } = options;
-        const img = new Image();
-        img.src = icon;
-        const { floor, min } = Math;
+    animationList.forEach((options, idx) => {
+        const { index, width, height, horizontalRange, background, icon, backgroundSize, speed, } = options;
+        const { floor } = Math;
         const bgRdius = floor(backgroundSize / 2);
-        const centerX = left + floor(width / 2);
-        const centerY = top + floor(height / 2);
-        const scale = min(0.3 + (canvasHeight - top) / (canvasHeight / 3), 1);
-        // const opacity = min(top / (canvasHeight / 8), 1);
+        const centerX = canvasWidth / 2 + Math.cos(index / 10) * horizontalRange;
+        const centerY = canvasHeight - speed * index;
+        const edgeProgress = (speed * index) / (canvasHeight - bgRdius);
+        const scale = getScale(edgeProgress);
+        const opacity = getOpacity(edgeProgress);
         // 渲染元素
         ctx.save();
         ctx.fillStyle = background;
         ctx.translate(centerX, centerY);
         ctx.scale(scale, scale);
         // 透明度设置
-        // ctx.globalAlpha = opacity;
+        ctx.globalAlpha = opacity;
         // 绘制背景样式
         let fillStyle = "";
         // 如果是渐变
@@ -175,14 +205,14 @@ const render = () => {
         ctx.fillStyle = fillStyle;
         ctx.fill();
         // 绘制图标
-        ctx.drawImage(img, -floor(width / 2), -floor(height / 2), width, height);
+        ctx.drawImage(icon, -floor(width / 2), -floor(height / 2), width, height);
         // 未完成动画
-        if (top >= -backgroundSize) {
-            options.top -= 3;
+        if (centerY >= -backgroundSize) {
+            options.index += 1;
             // 存储已经运动完成数组索引
         }
         else {
-            animationEndSet.add(index);
+            animationEndSet.add(idx);
             if (animationEndListener.length > 0) {
                 animationEndListener.forEach((fn) => fn());
             }
@@ -193,11 +223,11 @@ const render = () => {
     if (animationEndSet.size > 0) {
         animationList = animationList.filter((val, index) => !animationEndSet.has(index));
     }
-    // 是否继续执行动画
+    // // 是否继续执行动画
     if (animationList.length > 0) {
         requestAnimationFrame(render);
     }
-};
+}
 /**
  * 添加一个动画
  */
@@ -206,35 +236,25 @@ function animationDraw() {
     if (!(ctx instanceof CanvasRenderingContext2D)) {
         throw new Error("animation is not init, use animationInit init");
     }
-    const { iconSize, icons, backgrounds, backgroundSize } = animationConfig;
+    const { iconSize, icons, backgrounds, backgroundSize, speed, } = animationConfig;
     // 动态获取图标
     const icon = getArrayRandom(icons);
     // 动态获取图标背景颜色
     const background = getArrayRandom(backgrounds);
-    /**
-     * 获取放大尺寸
-     */
-    //  function getScan(scale: number, top: number, height: number): number {
-    //    const step = height / 10;
-    //    const current = height - top;
-    //    const result = 1;
-    //    if (current >= step) {
-    //       return result;
-    //    }
-    //    if (current < step / 2) {
-    //       return 0.4;
-    //    }
-    //    return step;
-    // }
+    // 水平移动最大范围
+    const horizontalRange = getRandom(10, 60);
+    const img = new Image();
+    img.src = icon;
     // 动画队列添加元素
     animationList.push({
-        left: Math.floor(canvasWidth / 2 - 17),
-        top: canvasHeight,
+        index: 0,
+        horizontalRange,
         width: iconSize,
         height: iconSize,
-        icon,
+        icon: img,
         backgroundSize,
         background,
+        speed,
     });
     if (animationList.length === 1) {
         requestAnimationFrame(render);

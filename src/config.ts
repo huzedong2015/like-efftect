@@ -16,7 +16,7 @@ export const defaultConfig: AnimationConfig = {
    icons: [],
    iconSize: 40,
    backgroundSize: 72,
-   speed: 2,
+   speed: 3,
    backgrounds: [
       "#ff839b, #fbd8b8",
       "#6a82fc, #cea8fd",
