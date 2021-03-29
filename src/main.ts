@@ -1,111 +1,6 @@
-// import { defaultConfig, animationConfigMerge } from "./config";
-// import type { AnimationConfig } from "./config";
-// import { preLoadImgs, getArrayRandom } from "./ulits";
-/**
- * 图片预加载
- * @param imgs 图片地址
- */
-export const preLoadImgs = (imgs: string[] | undefined | string) => {
-   if (!imgs) {
-      return;
-   }
-
-   /**
-    * 加载图片
-    * @param img
-    */
-   const load = (img: string) => {
-      const image = new Image();
-
-      image.src = img;
-   };
-
-   // 多个图片和单个图片加载
-   if (Array.isArray(imgs)) {
-      imgs.forEach(load);
-   } else if (typeof imgs === "string") {
-      load(imgs);
-   }
-};
-
-/**
- *
- * @param min 最小值
- * @param max 最大值
- * @returns
- */
-export const getRandom = (min: number, max: number): number => {
-   const { floor, random } = Math;
-   return min + floor(random() * (max - min));
-};
-
-/**
- * 获取数据随机值
- * @param arg 数据
- * @returns
- */
-export const getArrayRandom = <T>(arg: Array<T>): T => {
-   const randomIndex = getRandom(0, arg.length);
-
-   return arg[randomIndex];
-};
-
-export interface AnimationConfig {
-   /** 图标 */
-   icons: string[];
-   /** 图标大小 */
-   iconSize: number;
-   /** 背景  */
-   backgrounds: string[];
-   /** 背景大小 */
-   backgroundSize: number;
-   /** 速度 */
-   speed: number;
-}
-
-/** 配置 */
-export const defaultConfig: AnimationConfig = {
-   icons: [],
-   iconSize: 40,
-   backgroundSize: 72,
-   speed: 100,
-   backgrounds: [
-      "#ff839b, #fbd8b8",
-      "#6a82fc, #cea8fd",
-      "#43bbed, #38edc0",
-      "#888efc, #43e2e6",
-      "#f48d62, #fed1aa",
-      "#fcd39b, #ffe87e",
-      "#ffa7d3, #ffe2e8",
-   ],
-};
-
-/**
- * 配置合并
- * TO DO 需要更详细合并规则
- */
-export const animationConfigMerge = (
-   target: AnimationConfig,
-   source: Partial<AnimationConfig>,
-): void => {
-   const getSourceType = <K>(val: K) => Object.prototype.toString.call(val);
-
-   if (getSourceType(target) !== "[object Object]") {
-      throw new Error("target is not Object");
-   }
-
-   if (getSourceType(source) !== "[object Object]") {
-      throw new Error("target is not Object");
-   }
-
-   Object.assign(target, source);
-
-   // Object.keys(source).forEach((key: T) => {
-   //    if (key in target && getSourceType(target[key]) === getSourceType(source[key])) {
-
-   //    }
-   // });
-};
+import { defaultConfig, animationConfigMerge } from "./config";
+import type { AnimationConfig } from "./config";
+import { preLoadImgs, getArrayRandom } from "./ulits";
 
 // canvas
 let canvas: HTMLCanvasElement;
@@ -122,10 +17,10 @@ const animationConfig = { ...defaultConfig };
  * @param elQuery
  * @param imgs
  */
-export const animationInit = (
+export function animationInit(
    elQuery: string,
    config: Partial<AnimationConfig>,
-) => {
+): void {
    // 如果参数为空
    if (!elQuery) {
       throw new Error("elQuery is undefined");
@@ -161,18 +56,17 @@ export const animationInit = (
 
    // 预加载图标
    preLoadImgs(animationConfig.icons);
-};
+}
 
 /**
  * 动画执行完毕
  */
-// animationCallback
 const animationEndListener: Function[] = [];
-export const onAnimateEnd = (fn: Function): void => {
+export function onAnimateEnd(fn: Function): void {
    if (typeof fn === "function") {
       animationEndListener.push(fn);
    }
-};
+}
 
 let animationList: Array<{
    /** 左偏移 */
@@ -199,25 +93,6 @@ const render = () => {
    const animationEndSet: Set<number> = new Set();
 
    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-   /**
-    * 获取放大尺寸
-    */
-   function getScan(scale, top: number, height: number): number {
-      const step = height / 10;
-      const current = height - top;
-      const result = 1;
-
-      if (current >= step) {
-         return result;
-      }
-
-      if (current < step / 2) {
-         return 0.4;
-      }
-      return step;
-
-      return result;
 
    animationList.forEach((options, index) => {
       const {
@@ -308,7 +183,7 @@ const render = () => {
 /**
  * 添加一个动画
  */
-export const animationDraw = (): void => {
+export function animationDraw(): void {
    // 没有初始话
    if (!(ctx instanceof CanvasRenderingContext2D)) {
       throw new Error("animation is not init, use animationInit init");
@@ -320,6 +195,24 @@ export const animationDraw = (): void => {
    const icon = getArrayRandom(icons);
    // 动态获取图标背景颜色
    const background = getArrayRandom(backgrounds);
+
+   /**
+    * 获取放大尺寸
+    */
+   //  function getScan(scale: number, top: number, height: number): number {
+   //    const step = height / 10;
+   //    const current = height - top;
+   //    const result = 1;
+
+   //    if (current >= step) {
+   //       return result;
+   //    }
+
+   //    if (current < step / 2) {
+   //       return 0.4;
+   //    }
+   //    return step;
+   // }
 
    // 动画队列添加元素
    animationList.push({
@@ -335,4 +228,4 @@ export const animationDraw = (): void => {
    if (animationList.length === 1) {
       requestAnimationFrame(render);
    }
-};
+}

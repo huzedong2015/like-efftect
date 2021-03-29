@@ -1,5 +1,82 @@
-import { defaultConfig, animationConfigMerge } from "./config";
-import { preLoadImgs, getArrayRandom } from "./ulits";
+/** 配置 */
+const defaultConfig = {
+    icons: [],
+    iconSize: 40,
+    backgroundSize: 72,
+    speed: 2,
+    backgrounds: [
+        "#ff839b, #fbd8b8",
+        "#6a82fc, #cea8fd",
+        "#43bbed, #38edc0",
+        "#888efc, #43e2e6",
+        "#f48d62, #fed1aa",
+        "#fcd39b, #ffe87e",
+        "#ffa7d3, #ffe2e8",
+    ],
+};
+/**
+ * 配置合并
+ * TO DO 需要更详细合并规则
+ */
+function animationConfigMerge(target, source) {
+    const getSourceType = (val) => Object.prototype.toString.call(val);
+    if (getSourceType(target) !== "[object Object]") {
+        throw new Error("target is not Object");
+    }
+    if (getSourceType(source) !== "[object Object]") {
+        throw new Error("target is not Object");
+    }
+    Object.assign(target, source);
+    // Object.keys(source).forEach((key: T) => {
+    //    if (key in target && getSourceType(target[key]) === getSourceType(source[key])) {
+    //    }
+    // });
+}
+
+/**
+ * 图片预加载
+ * @param imgs 图片地址
+ */
+function preLoadImgs(imgs) {
+    if (!imgs) {
+        return;
+    }
+    /**
+     * 加载图片
+     * @param img
+     */
+    const load = (img) => {
+        const image = new Image();
+        image.src = img;
+    };
+    // 多个图片和单个图片加载
+    if (Array.isArray(imgs)) {
+        imgs.forEach(load);
+    }
+    else if (typeof imgs === "string") {
+        load(imgs);
+    }
+}
+/**
+ *
+ * @param min 最小值
+ * @param max 最大值
+ * @returns
+ */
+function getRandom(min, max) {
+    const { floor, random } = Math;
+    return min + floor(random() * (max - min));
+}
+/**
+ * 获取数据随机值
+ * @param arg 数据
+ * @returns
+ */
+function getArrayRandom(arg) {
+    const randomIndex = getRandom(0, arg.length);
+    return arg[randomIndex];
+}
+
 // canvas
 let canvas;
 // ctx
@@ -14,7 +91,7 @@ const animationConfig = { ...defaultConfig };
  * @param elQuery
  * @param imgs
  */
-export function animationInit(elQuery, config) {
+function animationInit(elQuery, config) {
     // 如果参数为空
     if (!elQuery) {
         throw new Error("elQuery is undefined");
@@ -49,7 +126,7 @@ export function animationInit(elQuery, config) {
  * 动画执行完毕
  */
 const animationEndListener = [];
-export function onAnimateEnd(fn) {
+function onAnimateEnd(fn) {
     if (typeof fn === "function") {
         animationEndListener.push(fn);
     }
@@ -124,7 +201,7 @@ const render = () => {
 /**
  * 添加一个动画
  */
-export function animationDraw() {
+function animationDraw() {
     // 没有初始话
     if (!(ctx instanceof CanvasRenderingContext2D)) {
         throw new Error("animation is not init, use animationInit init");
@@ -163,3 +240,5 @@ export function animationDraw() {
         requestAnimationFrame(render);
     }
 }
+
+export { animationDraw, animationInit, onAnimateEnd };

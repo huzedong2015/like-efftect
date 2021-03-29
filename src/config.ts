@@ -1,17 +1,23 @@
 export interface AnimationConfig {
    /** 图标 */
    icons: string[];
+   /** 图标大小 */
+   iconSize: number;
    /** 背景  */
-   background: string[];
+   backgrounds: string[];
+   /** 背景大小 */
+   backgroundSize: number;
    /** 速度 */
-   speed: number
+   speed: number;
 }
 
 /** 配置 */
 export const defaultConfig: AnimationConfig = {
    icons: [],
-   speed: 100,
-   background: [
+   iconSize: 40,
+   backgroundSize: 72,
+   speed: 2,
+   backgrounds: [
       "#ff839b, #fbd8b8",
       "#6a82fc, #cea8fd",
       "#43bbed, #38edc0",
@@ -26,14 +32,17 @@ export const defaultConfig: AnimationConfig = {
  * 配置合并
  * TO DO 需要更详细合并规则
  */
-export const animationConfigMerge = (target:AnimationConfig, source: AnimationConfig): void => {
+export function animationConfigMerge(
+   target: AnimationConfig,
+   source: Partial<AnimationConfig>,
+): void {
    const getSourceType = <K>(val: K) => Object.prototype.toString.call(val);
 
-   if (getSourceType(target) === "[object Object]") {
+   if (getSourceType(target) !== "[object Object]") {
       throw new Error("target is not Object");
    }
 
-   if (getSourceType(source) === "[object Object]") {
+   if (getSourceType(source) !== "[object Object]") {
       throw new Error("target is not Object");
    }
 
@@ -44,4 +53,4 @@ export const animationConfigMerge = (target:AnimationConfig, source: AnimationCo
 
    //    }
    // });
-};
+}

@@ -2,7 +2,7 @@
  * 图片预加载
  * @param imgs 图片地址
  */
-export const preLoadImgs = (imgs: string[] | undefined | string) => {
+export function preLoadImgs(imgs: string[] | undefined | string): void {
    if (!imgs) {
       return;
    }
@@ -23,7 +23,7 @@ export const preLoadImgs = (imgs: string[] | undefined | string) => {
    } else if (typeof imgs === "string") {
       load(imgs);
    }
-};
+}
 
 /**
  *
@@ -31,18 +31,18 @@ export const preLoadImgs = (imgs: string[] | undefined | string) => {
  * @param max 最大值
  * @returns
  */
-export const getRandom = (min: number, max: number): number => {
+export function getRandom(min: number, max: number): number {
    const { floor, random } = Math;
    return min + floor(random() * (max - min));
-};
+}
 
 /**
  * 获取数据随机值
  * @param arg 数据
  * @returns
  */
-export const getArrayRandom = <T>(arg:Array<T>): T => {
+export function getArrayRandom<T>(arg: Array<T>): T {
    const randomIndex = getRandom(0, arg.length);
 
    return arg[randomIndex];
-};
+}

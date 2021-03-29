@@ -1,8 +1,10 @@
 /** 配置 */
 export const defaultConfig = {
     icons: [],
-    speed: 100,
-    background: [
+    iconSize: 40,
+    backgroundSize: 72,
+    speed: 2,
+    backgrounds: [
         "#ff839b, #fbd8b8",
         "#6a82fc, #cea8fd",
         "#43bbed, #38edc0",
@@ -16,12 +18,12 @@ export const defaultConfig = {
  * 配置合并
  * TO DO 需要更详细合并规则
  */
-export const animationConfigMerge = (target, source) => {
+export function animationConfigMerge(target, source) {
     const getSourceType = (val) => Object.prototype.toString.call(val);
-    if (getSourceType(target) === "[object Object]") {
+    if (getSourceType(target) !== "[object Object]") {
         throw new Error("target is not Object");
     }
-    if (getSourceType(source) === "[object Object]") {
+    if (getSourceType(source) !== "[object Object]") {
         throw new Error("target is not Object");
     }
     Object.assign(target, source);
@@ -29,4 +31,4 @@ export const animationConfigMerge = (target, source) => {
     //    if (key in target && getSourceType(target[key]) === getSourceType(source[key])) {
     //    }
     // });
-};
+}

@@ -2,7 +2,7 @@
  * 图片预加载
  * @param imgs 图片地址
  */
-export const preLoadImgs = (imgs) => {
+export function preLoadImgs(imgs) {
     if (!imgs) {
         return;
     }
@@ -21,23 +21,23 @@ export const preLoadImgs = (imgs) => {
     else if (typeof imgs === "string") {
         load(imgs);
     }
-};
+}
 /**
  *
  * @param min 最小值
  * @param max 最大值
  * @returns
  */
-export const getRandom = (min, max) => {
+export function getRandom(min, max) {
     const { floor, random } = Math;
     return min + floor(random() * (max - min));
-};
+}
 /**
  * 获取数据随机值
  * @param arg 数据
  * @returns
  */
-export const getArrayRandom = (arg) => {
+export function getArrayRandom(arg) {
     const randomIndex = getRandom(0, arg.length);
     return arg[randomIndex];
-};
+}
